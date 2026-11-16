@@ -1,0 +1,19 @@
+# Konfigurasi NVIDIA NeMo Guardrails.
+# Model pemeriksa dipanggil lewat OpenRouter (API kompatibel OpenAI).
+# ${GUARD_MODEL} dan ${LLM_BASE_URL} diisi oleh rag/guardrails.py dari environment variable.
+models:
+  - type: main
+    engine: openai
+    model: ${GUARD_MODEL}
+    api_key_env_var: OPENROUTER_API_KEY
+    parameters:
+      base_url: ${LLM_BASE_URL}
+      temperature: 0
+
+rails:
+  input:
+    flows:
+      - self check input     # periksa pertanyaan sebelum diproses
+  output:
+    flows:
+      - self check output    # periksa jawaban sebelum ditampilkan

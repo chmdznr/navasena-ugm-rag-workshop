@@ -1,0 +1,7 @@
+.git
+.venv
+.env
+data/pdf
+slides
+**/__pycache__
+**/.ipynb_checkpoints

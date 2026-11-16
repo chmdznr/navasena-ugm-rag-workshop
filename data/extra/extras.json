@@ -1,0 +1,16 @@
+[
+  {
+    "source_id": "forum-tips-chunking",
+    "file": "tips_chunking_forum.md",
+    "title": "Tips ukuran chunk dari forum komunitas",
+    "authors": "contoh buatan",
+    "access_level": "public"
+  },
+  {
+    "source_id": "lab-catatan-internal",
+    "file": "catatan_internal_lab.md",
+    "title": "Catatan internal Lab RAG (fiktif)",
+    "authors": "contoh buatan",
+    "access_level": "internal"
+  }
+]

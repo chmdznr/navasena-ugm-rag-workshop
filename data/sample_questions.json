@@ -1,0 +1,74 @@
+[
+  {
+    "question": "Apa saja tujuh titik kegagalan saat membangun sistem RAG?",
+    "source": "arxiv:2401.05856"
+  },
+  {
+    "question": "Bagaimana Ragas mengukur faithfulness sebuah jawaban?",
+    "source": "arxiv:2309.15217"
+  },
+  {
+    "question": "Apa itu answer relevance dalam evaluasi RAG?",
+    "source": "arxiv:2309.15217"
+  },
+  {
+    "question": "Apa fungsi reflection token pada Self-RAG?",
+    "source": "arxiv:2310.11511"
+  },
+  {
+    "question": "Bagaimana Self-RAG memutuskan kapan perlu melakukan retrieval?",
+    "source": "arxiv:2310.11511"
+  },
+  {
+    "question": "Bagaimana serangan Phantom meracuni pustaka RAG?",
+    "source": "arxiv:2405.20485"
+  },
+  {
+    "question": "Apa peran trigger dalam serangan backdoor terhadap RAG?",
+    "source": "arxiv:2405.20485"
+  },
+  {
+    "question": "Bagaimana GraphRAG menjawab pertanyaan yang bersifat global atas seluruh korpus?",
+    "source": "arxiv:2404.16130"
+  },
+  {
+    "question": "Apa itu community summary pada GraphRAG?",
+    "source": "arxiv:2404.16130"
+  },
+  {
+    "question": "Bagaimana RAPTOR membangun pohon ringkasan dari dokumen?",
+    "source": "arxiv:2401.18059"
+  },
+  {
+    "question": "Apa beda collapsed tree dan tree traversal pada RAPTOR?",
+    "source": "arxiv:2401.18059"
+  },
+  {
+    "question": "Kapan LLM dengan konteks panjang lebih baik daripada RAG?",
+    "source": "arxiv:2407.16833"
+  },
+  {
+    "question": "Apa itu Self-Route dan bagaimana cara kerjanya?",
+    "source": "arxiv:2407.16833"
+  },
+  {
+    "question": "Metode chunking apa yang disarankan untuk pipeline RAG?",
+    "source": "arxiv:2407.01219"
+  },
+  {
+    "question": "Bagaimana reranking memengaruhi kualitas jawaban RAG?",
+    "source": "arxiv:2407.01219"
+  },
+  {
+    "question": "Vector database apa saja yang dibandingkan dalam studi praktik terbaik RAG?",
+    "source": "arxiv:2407.01219"
+  },
+  {
+    "question": "Apa manfaat query rewriting sebelum retrieval?",
+    "source": "arxiv:2407.01219"
+  },
+  {
+    "question": "Mengapa dokumen yang relevan bisa tidak masuk ke konteks jawaban?",
+    "source": "arxiv:2401.05856"
+  }
+]

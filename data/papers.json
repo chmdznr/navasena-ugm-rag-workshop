@@ -1,0 +1,66 @@
+[
+  {
+    "id": "2407.01219",
+    "title": "Searching for Best Practices in Retrieval-Augmented Generation",
+    "authors": "Wang et al.",
+    "year": 2024,
+    "license": "CC BY 4.0",
+    "topic": "Praktik terbaik pipeline RAG"
+  },
+  {
+    "id": "2401.05856",
+    "title": "Seven Failure Points When Engineering a Retrieval Augmented Generation System",
+    "authors": "Barnett et al.",
+    "year": 2024,
+    "license": "CC BY 4.0",
+    "topic": "Titik gagal sistem RAG"
+  },
+  {
+    "id": "2309.15217",
+    "title": "Ragas: Automated Evaluation of Retrieval Augmented Generation",
+    "authors": "Es et al.",
+    "year": 2023,
+    "license": "CC BY 4.0",
+    "topic": "Evaluasi RAG"
+  },
+  {
+    "id": "2310.11511",
+    "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection",
+    "authors": "Asai et al.",
+    "year": 2023,
+    "license": "CC BY 4.0",
+    "topic": "RAG adaptif"
+  },
+  {
+    "id": "2405.20485",
+    "title": "Phantom: General Backdoor Attacks on Retrieval Augmented Language Generation",
+    "authors": "Chaudhari et al.",
+    "year": 2024,
+    "license": "CC BY 4.0",
+    "topic": "Serangan pada RAG"
+  },
+  {
+    "id": "2404.16130",
+    "title": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+    "authors": "Edge et al.",
+    "year": 2024,
+    "license": "CC BY 4.0",
+    "topic": "GraphRAG"
+  },
+  {
+    "id": "2401.18059",
+    "title": "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval",
+    "authors": "Sarthi et al.",
+    "year": 2024,
+    "license": "CC BY 4.0",
+    "topic": "Retrieval berjenjang"
+  },
+  {
+    "id": "2407.16833",
+    "title": "Retrieval Augmented Generation or Long-Context LLMs? A Comprehensive Study and Hybrid Approach",
+    "authors": "Li et al.",
+    "year": 2024,
+    "license": "CC BY 4.0",
+    "topic": "RAG vs konteks panjang"
+  }
+]

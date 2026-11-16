@@ -1,0 +1,13 @@
+# Image terpisah untuk Docling. Ukurannya besar karena membawa PyTorch dan model tata letak,
+# jadi hanya dibangun bila ingin mem-parsing PDF sendiri (profil "docling").
+FROM python:3.12-slim
+
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+    && pip install docling
+
+WORKDIR /workshop
