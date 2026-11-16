@@ -33,7 +33,7 @@ Key OpenRouter gratis dibuat di https://openrouter.ai/settings/keys. Tanpa key, 
 | 2 · Setting up RAG | `notebooks/02_setting_up_rag.ipynb` | Docling, chunking, embedding, pgvector, peta embedding, ukuran kualitas retrieval |
 | 3 · Implementation and safety | `notebooks/03_rag_dan_safety.ipynb` | Tanya-jawab ujung ke ujung, hak akses, dokumen beracun, deteksi anomali, Guardrails AI, perlindungan PII, promptfoo |
 
-Slide ada di `slides/dist/`. Soal kuis dan panduan pembicara ada di `docs/`.
+Slide ada di `slides/dist/` (PPTX dan PDF).
 
 Setelah ketiga sesi, folder `service/` menunjukkan pipeline yang sama disusun dengan framework (LlamaIndex) sebagai layanan yang mendekati production. Lihat `service/README.md`.
 
@@ -137,18 +137,6 @@ Uji layanan (`service/tests`) butuh dependensi tambahan:
 .venv/bin/pip install -r service/requirements.txt httpx
 .venv/bin/python -m pytest tests service/tests -q
 ```
-
-## Membangun ulang slide
-
-Butuh `python-pptx`, dan LibreOffice bila ingin PDF.
-
-```bash
-python slides/collect.py --llm    # perbarui angka dan rekaman jawaban dari sistem
-python slides/capture.py peta retrieval tanya   # tangkapan layar (butuh Playwright)
-python slides/build.py
-```
-
-Angka di slide dibaca dari `slides/data.json`, yang dihitung dari sistem yang sedang berjalan.
 
 ## Sumber dokumen
 

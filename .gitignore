@@ -7,4 +7,7 @@ __pycache__/
 .DS_Store
 data/pdf/
 uji/hasil/
-slides/.qa/
+# Hanya deck jadi yang ikut di repo; alat pembuatnya disimpan di luar repo.
+slides/*
+!slides/dist/
+docs/
