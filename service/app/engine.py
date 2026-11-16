@@ -1,4 +1,4 @@
-"""Inti layanan: pengaman, retrieval dengan filter hak akses, lalu jawaban dari LLM."""
+"""Inti layanan: guardrail, retrieval dengan filter hak akses, lalu jawaban dari LLM."""
 from __future__ import annotations
 
 import asyncio
@@ -36,7 +36,7 @@ class Result:
 
 
 class RagEngine:
-    """Dibuat sekali saat layanan start; aman dipakai bersama oleh banyak permintaan."""
+    """Dibuat sekali saat layanan start; aman dipakai bersama oleh banyak request."""
 
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -50,7 +50,7 @@ class RagEngine:
         return float(value) if value else self.settings.anomaly_threshold_default
 
     async def ready(self) -> bool:
-        """Siap bila basis data terjangkau dan pustaka tidak kosong."""
+        """Siap bila database terjangkau dan knowledge base tidak kosong."""
         nodes = await self._retrieve("uji kesiapan", "public", 1)
         return bool(nodes)
 
@@ -73,7 +73,7 @@ class RagEngine:
         guarded = level != "off"
 
         flags: list[str] = []
-        if guarded:  # samarkan PII sebelum retrieval dan sebelum teks dikirim ke penyedia LLM
+        if guarded:  # mask PII sebelum retrieval dan sebelum teks dikirim ke provider LLM
             from rag import guards
 
             question, pii = await asyncio.to_thread(guards.mask_pii, question)

@@ -24,7 +24,7 @@ def test_citation_validator():
     validator = guards.HasCitation(on_fail=OnFailAction.NOOP)
     assert failed(validator, "Ukuran chunk sebaiknya kecil.")
     assert failed(validator, "Ukuran chunk 512 token [2].") == {}
-    assert failed(validator, "Saya tidak menemukan jawabannya di pustaka.") == {}
+    assert failed(validator, "Saya tidak menemukan jawabannya di dokumen yang tersedia.") == {}
 
 
 def test_hub_validators_are_wired_in():
@@ -38,10 +38,10 @@ def test_pii_is_masked():
     text = ("Hubungi budi.santoso@lab-rag.example atau 0812-5550-1234, NIK 3404011505990001, "
             "NPWP 01.234.567.8-901.000, kartu 4111 1111 1111 1111.")
     masked, kinds = guards.mask_pii(text)
-    assert set(kinds) == {"SUREL", "NO_HP", "NIK", "NPWP", "KARTU"}
+    assert set(kinds) == {"EMAIL", "NO_HP", "NIK", "NPWP", "KARTU"}
     for secret in ["budi.santoso", "0812", "3404011505990001", "567.8", "4111"]:
         assert secret not in masked
-    assert "<SUREL>" in masked and "<NIK>" in masked
+    assert "<EMAIL>" in masked and "<NIK>" in masked
 
 
 def test_text_without_pii_is_unchanged():

@@ -1,4 +1,4 @@
--- Skema basis data workshop RAG. Aman dijalankan berulang kali.
+-- Skema database workshop RAG. Aman dijalankan berulang kali.
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -23,11 +23,11 @@ CREATE TABLE IF NOT EXISTS chunks (
     embedding     vector(384) NOT NULL
 );
 
--- Indeks HNSW untuk pencarian tetangga terdekat berdasarkan jarak kosinus.
+-- Indeks HNSW untuk pencarian tetangga terdekat berdasarkan cosine distance.
 CREATE INDEX IF NOT EXISTS chunks_embedding_hnsw
     ON chunks USING hnsw (embedding vector_cosine_ops);
 
--- Catatan setiap pertanyaan yang masuk, dipakai untuk pemantauan dan deteksi anomali.
+-- Catatan setiap pertanyaan yang masuk, dipakai untuk monitoring dan deteksi anomali.
 CREATE TABLE IF NOT EXISTS query_log (
     id              BIGSERIAL PRIMARY KEY,
     asked_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS query_log (
     latency_ms      INT
 );
 
--- Nilai kecil yang perlu diingat antarproses, mis. ambang deteksi anomali.
+-- Nilai kecil yang perlu diingat antarproses, mis. threshold deteksi anomali.
 CREATE TABLE IF NOT EXISTS settings (
     key    TEXT PRIMARY KEY,
     value  TEXT NOT NULL

@@ -1,4 +1,4 @@
-"""Bangun pustaka RAG: Markdown -> chunk -> embedding -> PostgreSQL (pgvector).
+"""Bangun knowledge base RAG: Markdown -> chunk -> embedding -> PostgreSQL (pgvector).
 
 Jalankan:  python scripts/ingest.py
 Aman dijalankan ulang; dokumen yang sama akan ditimpa, bukan digandakan.
@@ -58,7 +58,7 @@ def load_sources() -> list[tuple[dict, Path]]:
 
 
 def calibrate(conn) -> float:
-    """Hitung ambang deteksi anomali dari pertanyaan contoh yang memang relevan."""
+    """Hitung threshold deteksi anomali dari pertanyaan contoh yang memang relevan."""
     samples = json.loads((DATA / "sample_questions.json").read_text())
     questions = [sample["question"] for sample in samples]
     vectors = embed_texts(questions)
@@ -72,17 +72,20 @@ def main() -> None:
     conn = db.connect()
     db.ensure_schema(conn)
     start = time.time()
-    for meta, path in load_sources():
-        if not path.exists():
-            print(f"lewati  {meta['source_id']}  (berkas {path.name} tidak ada)")
-            continue
-        count = ingest_document(conn, meta, path.read_text(encoding="utf-8"))
-        print(f"masuk   {meta['source_id']:<24} {count:>4} chunk  {meta['title'][:50]}")
-    threshold = calibrate(conn)
+    # Satu transaksi untuk seluruh proses: aplikasi yang sedang berjalan tetap melihat
+    # knowledge base lama sampai yang baru selesai ditulis dan threshold-nya dihitung.
+    with conn.transaction():
+        for meta, path in load_sources():
+            if not path.exists():
+                print(f"lewati  {meta['source_id']}  (file {path.name} tidak ada)")
+                continue
+            count = ingest_document(conn, meta, path.read_text(encoding="utf-8"))
+            print(f"masuk   {meta['source_id']:<24} {count:>4} chunk  {meta['title'][:50]}")
+        threshold = calibrate(conn)
     totals = db.stats(conn)
     print(f"\nSelesai dalam {time.time() - start:.0f} detik: "
           f"{totals['documents']} dokumen, {totals['chunks']} chunk.")
-    print(f"Ambang deteksi anomali: {threshold}")
+    print(f"Threshold deteksi anomali: {threshold}")
 
 
 if __name__ == "__main__":

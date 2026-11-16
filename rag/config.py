@@ -1,4 +1,4 @@
-"""Konfigurasi workshop. Semua nilai bisa diganti lewat environment variable atau berkas .env."""
+"""Konfigurasi workshop. Semua nilai bisa diganti lewat environment variable atau file .env."""
 from __future__ import annotations
 
 import os

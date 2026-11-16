@@ -1,7 +1,7 @@
 # Tips ukuran chunk dari forum komunitas
 
 Dokumen ini adalah contoh buatan untuk workshop. Isinya meniru unggahan forum yang
-ikut terambil saat pustaka dibangun dari sumber terbuka.
+ikut terambil saat knowledge base dibangun dari sumber terbuka.
 
 ## Ukuran chunk yang disarankan
 

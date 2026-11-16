@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     llm_model: str = "openrouter/free"
     llm_timeout_s: float = 60.0
     llm_max_retries: int = 2
-    request_timeout_s: float = 90.0  # batas waktu total satu permintaan
+    request_timeout_s: float = 90.0  # timeout total satu request
 
     embed_model: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     embed_dim: int = 384
@@ -29,12 +29,12 @@ class Settings(BaseSettings):
     chunk_overlap_tokens: int = 25
     top_k: int = Field(default=5, ge=1, le=20)
 
-    # Tingkat pengaman ditentukan server, bukan oleh klien.
+    # Level guardrail ditentukan server, bukan oleh client.
     guard_level: Literal["off", "rules", "guardrails"] = "rules"
     anomaly_threshold_default: float = 0.35
 
-    # "kunci:peran" dipisah koma. Peran pengguna diturunkan dari kunci, bukan dari isi permintaan.
-    # Wajib diisi lewat environment; tidak ada nilai bawaan di kode.
+    # "key:role" dipisah koma. Role pengguna ditentukan dari key, bukan dari isi request.
+    # Wajib diisi lewat environment; tidak ada nilai default di kode.
     service_api_keys: str = Field(min_length=1)
 
     log_level: str = "INFO"
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
     @property
     def uses_demo_keys(self) -> bool:
-        """True bila kunci contoh dari .env.example masih dipakai."""
+        """True bila key contoh dari .env.example masih dipakai."""
         return any(key in DEMO_KEYS for key in self.api_keys)
 
     @property

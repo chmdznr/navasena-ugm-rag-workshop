@@ -22,5 +22,5 @@ jobs:
             service/requirements.txt
       - name: Pasang dependensi
         run: pip install -r requirements.txt -r service/requirements.txt pytest httpx
-      - name: Uji unit (tanpa basis data dan tanpa LLM)
+      - name: Uji unit (tanpa database dan tanpa LLM)
         run: python -m pytest tests service/tests -q

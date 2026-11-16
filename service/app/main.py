@@ -21,9 +21,9 @@ from .settings import Settings, get_settings
 
 log = logging.getLogger("service")
 
-REQUESTS = Counter("rag_requests_total", "Jumlah permintaan /v1/query", ["status"])
-BLOCKED = Counter("rag_blocked_total", "Permintaan yang ditahan pengaman", ["flag"])
-LATENCY = Histogram("rag_request_seconds", "Lama permintaan /v1/query",
+REQUESTS = Counter("rag_requests_total", "Jumlah request /v1/query", ["status"])
+BLOCKED = Counter("rag_blocked_total", "Request yang diblokir guardrail", ["flag"])
+LATENCY = Histogram("rag_request_seconds", "Lama request /v1/query",
                     buckets=(0.5, 1, 2, 5, 10, 20, 40, 80))
 TOP_SCORE = Histogram("rag_top_similarity", "Kemiripan tertinggi hasil retrieval",
                       buckets=(0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9))
@@ -79,7 +79,7 @@ def create_app(engine=None, settings: Settings | None = None) -> FastAPI:
         else:
             app.state.engine = engine
         if app.state.settings.uses_demo_keys:
-            log.warning("SERVICE_API_KEYS masih memakai kunci contoh; ganti sebelum layanan dibuka ke jaringan")
+            log.warning("SERVICE_API_KEYS masih memakai key contoh; ganti sebelum layanan dibuka ke jaringan")
         log.info("layanan siap", extra={"fields": {"guard_level": app.state.settings.guard_level}})
         yield
 
@@ -87,7 +87,7 @@ def create_app(engine=None, settings: Settings | None = None) -> FastAPI:
 
     def role_from_key(request: Request, x_api_key: str | None = Header(default=None)) -> str:
         given = (x_api_key or "").encode()
-        # Bandingkan dalam waktu tetap supaya kunci tidak bisa ditebak dari lama respons.
+        # Bandingkan secara constant-time supaya key tidak bisa ditebak dari lama respons.
         for key, role in request.app.state.settings.api_keys.items():
             if hmac.compare_digest(given, key.encode()):
                 return role
@@ -100,13 +100,13 @@ def create_app(engine=None, settings: Settings | None = None) -> FastAPI:
 
     @app.get("/readyz", include_in_schema=False)
     async def readyz(request: Request) -> dict:
-        """Readiness: basis data terjangkau dan pustaka terisi."""
+        """Readiness: database terjangkau dan knowledge base terisi."""
         try:
             ready = await request.app.state.engine.ready()
         except Exception as error:
             raise HTTPException(status_code=503, detail=f"belum siap: {type(error).__name__}") from error
         if not ready:
-            raise HTTPException(status_code=503, detail="pustaka kosong; jalankan job ingest")
+            raise HTTPException(status_code=503, detail="knowledge base kosong; jalankan job ingest")
         return {"status": "ready"}
 
     @app.get("/metrics", include_in_schema=False)
@@ -124,13 +124,13 @@ def create_app(engine=None, settings: Settings | None = None) -> FastAPI:
             )
         except asyncio.TimeoutError as error:
             REQUESTS.labels("timeout").inc()
-            log.error("permintaan melewati batas waktu", extra={"fields": {"request_id": request_id, "role": role}})
-            raise HTTPException(status_code=504, detail="melewati batas waktu") from error
+            log.error("request timeout", extra={"fields": {"request_id": request_id, "role": role}})
+            raise HTTPException(status_code=504, detail="timeout") from error
         except Exception as error:
             REQUESTS.labels("error").inc()
-            log.error("permintaan gagal", extra={"fields": {
+            log.error("request gagal", extra={"fields": {
                 "request_id": request_id, "role": role, "error": f"{type(error).__name__}: {error}"[:300]}})
-            raise HTTPException(status_code=502, detail="LLM atau basis data tidak menjawab") from error
+            raise HTTPException(status_code=502, detail="LLM atau database tidak menjawab") from error
 
         LATENCY.observe(time.perf_counter() - start)
         REQUESTS.labels("blocked" if result.blocked else "ok").inc()

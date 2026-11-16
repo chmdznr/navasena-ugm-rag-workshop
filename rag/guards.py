@@ -1,4 +1,4 @@
-"""Pemeriksaan masukan dan keluaran dengan Guardrails AI (github.com/guardrails-ai/guardrails).
+"""Pemeriksaan input dan output dengan Guardrails AI (github.com/guardrails-ai/guardrails).
 
 Guardrails AI menyusun pemeriksaan sebagai validator. Sebuah Guard menjalankan deretan
 validator atas satu teks lalu melaporkan mana yang gagal dan alasannya.
@@ -9,7 +9,7 @@ Validator datang dari dua tempat:
 - Ditulis sendiri: kelas turunan Validator untuk aturan yang khas aplikasi ini.
 
 Tiga guard dipakai pipeline:
-- pii_guard()    : menyamarkan data pribadi (PII) pada pertanyaan dan jawaban.
+- pii_guard()    : me-mask data pribadi (PII) pada pertanyaan dan jawaban.
 - input_guard()  : memeriksa pertanyaan pengguna sebelum retrieval.
 - output_guard() : memeriksa jawaban LLM sebelum ditampilkan.
 """
@@ -21,13 +21,13 @@ from functools import lru_cache
 
 from guardrails import Guard, OnFailAction
 from guardrails.validators import FailResult, PassResult, Validator, register_validator
-from guardrails_ai.secrets_present import SecretsPresent  # Hub: kunci API atau token di dalam teks
+from guardrails_ai.secrets_present import SecretsPresent  # Hub: API key atau token di dalam teks
 from guardrails_ai.valid_length import ValidLength  # Hub: batas panjang teks
 
 from . import llm, safety
 from .config import LLM_MODEL
 
-# Guardrails AI secara bawaan mengirim metrik pemakaian anonim. Untuk workshop ini dimatikan.
+# Guardrails AI secara default mengirim metrik pemakaian anonim. Untuk workshop ini dimatikan.
 # Cara resminya: `guardrails configure --disable-metrics` (menulis ~/.guardrailsrc).
 from guardrails.utils.hub_telemetry_utils import HubTelemetry  # noqa: E402
 
@@ -54,7 +54,7 @@ CITATION = re.compile(r"\[\d+\]")
 # Pola data pribadi yang lazim di Indonesia. Nama orang tidak bisa dikenali dengan pola;
 # untuk itu dibutuhkan model pengenal entitas, misalnya DetectPII dari Guardrails Hub.
 PII_PATTERNS = {
-    "SUREL": re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"),
+    "EMAIL": re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"),
     "NPWP": re.compile(r"(?<!\d)\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}(?!\d)"),
     "KARTU": re.compile(r"(?<!\d)\d{4}[ -]\d{4}[ -]\d{4}[ -]\d{4}(?!\d)"),
     "NIK": re.compile(r"(?<!\d)\d{16}(?!\d)"),
@@ -98,10 +98,10 @@ class NoCredentialRequest(Validator):
 
 @register_validator(name="workshop/pii-indonesia", data_type="string")
 class IndonesianPII(Validator):
-    """Gagal bila teks memuat surel, nomor HP, NIK, NPWP, atau nomor kartu.
+    """Gagal bila teks memuat email, nomor HP, NIK, NPWP, atau nomor kartu.
 
-    Hasil gagalnya membawa `fix_value`: teks yang sama dengan PII diganti penanda. Dengan
-    on_fail=FIX, Guard mengembalikan teks yang sudah disamarkan itu sebagai keluarannya.
+    Hasil gagalnya membawa `fix_value`: teks yang sama dengan PII diganti placeholder. Dengan
+    on_fail=FIX, Guard mengembalikan teks yang sudah di-mask itu sebagai output-nya.
     """
 
     def _validate(self, value, metadata):
@@ -169,7 +169,7 @@ def output_guard() -> Guard:
 
 @lru_cache(maxsize=1)
 def pii_guard() -> Guard:
-    """Penyamar PII. PII_ENGINE=presidio menambahkan DetectPII dari Guardrails Hub
+    """Guard untuk masking PII. PII_ENGINE=presidio menambahkan DetectPII dari Guardrails Hub
     (pip install guardrails-ai-detect-pii; mengunduh model spaCy sekitar 400 MB)."""
     validators = [IndonesianPII(on_fail=OnFailAction.FIX)]
     if os.getenv("PII_ENGINE", "").lower() == "presidio":
@@ -181,7 +181,7 @@ def pii_guard() -> Guard:
 
 
 def mask_pii(text: str) -> tuple[str, list[str]]:
-    """Kembalikan (teks yang PII-nya disamarkan, jenis PII yang ditemukan)."""
+    """Kembalikan (teks yang PII-nya di-mask, jenis PII yang ditemukan)."""
     outcome = pii_guard().validate(text)
     masked = outcome.validated_output if isinstance(outcome.validated_output, str) else text
     kinds = find_pii(text)

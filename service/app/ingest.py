@@ -65,7 +65,7 @@ def load_documents() -> list[Document]:
     ]
     for metadata, path in sources:
         if not path.exists():
-            log.warning("lewati %s: berkas %s tidak ada", metadata["source_id"], path.name)
+            log.warning("lewati %s: file %s tidak ada", metadata["source_id"], path.name)
             continue
         documents.append(Document(
             text=path.read_text(encoding="utf-8"),
@@ -79,11 +79,11 @@ def load_documents() -> list[Document]:
 
 
 def calibrate(index) -> float:
-    """Ambang deteksi anomali dari pertanyaan contoh: rata-rata dikurangi tiga simpangan baku."""
+    """Threshold deteksi anomali dari pertanyaan contoh: rata-rata dikurangi tiga standar deviasi."""
     samples = json.loads((DATA / "sample_questions.json").read_text())
     retriever = index.as_retriever(similarity_top_k=1)
     tops = [retriever.retrieve(sample["question"])[0].score for sample in samples]
-    log.info("kemiripan pertanyaan contoh: rata-rata %.3f, simpangan baku %.3f",
+    log.info("kemiripan pertanyaan contoh: rata-rata %.3f, standar deviasi %.3f",
              statistics.mean(tops), statistics.stdev(tops))
     return safety.calibrate_threshold(tops)
 
@@ -112,7 +112,7 @@ def main() -> None:
     db.ensure_schema(conn)
     threshold = calibrate(build_index(settings))
     db.set_setting(conn, "service_anomaly_threshold", str(threshold))
-    log.info("selesai: %d dokumen, %d node, %.0f detik, ambang anomali %.3f",
+    log.info("selesai: %d dokumen, %d node, %.0f detik, threshold anomali %.3f",
              len(documents), len(nodes), time.time() - start, threshold)
 
 

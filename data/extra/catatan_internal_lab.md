@@ -2,7 +2,7 @@
 
 Dokumen ini adalah contoh buatan untuk workshop. Semua nama, angka, dan jadwal di
 dalamnya fiktif. Dokumen diberi tingkat akses internal untuk menunjukkan cara
-membatasi hasil pencarian berdasarkan peran pengguna.
+membatasi hasil pencarian berdasarkan role pengguna.
 
 ## Jadwal pemakaian GPU
 
@@ -12,7 +12,7 @@ pekerjaan batch yang berjalan lebih dari dua belas jam.
 
 ## Penanggung jawab server
 
-Penanggung jawab server lab adalah Budi Santoso (tokoh fiktif). Ia bisa dihubungi lewat surel
+Penanggung jawab server lab adalah Budi Santoso (tokoh fiktif). Ia bisa dihubungi lewat email
 budi.santoso@lab-rag.example atau telepon 0812-5550-1234. Permintaan akses server disertai
 NIK pemohon, misalnya 3404011505990001, untuk dicatat di buku tamu.
 

@@ -1,4 +1,4 @@
-"""Uji API tanpa basis data dan tanpa LLM: mesin RAG diganti tiruan."""
+"""Uji API tanpa database dan tanpa LLM: engine RAG diganti mock."""
 from fastapi.testclient import TestClient
 
 from service.app.engine import Result, Source
@@ -64,7 +64,7 @@ def test_response_shape_and_request_id():
     assert response.status_code == 200
     assert body["request_id"] == "abc123"
     assert body["sources"] == [{"source_id": "arxiv:1", "title": "Judul", "score": 0.7}]
-    assert "isi chunk" not in response.text  # teks chunk tidak dikirim ke klien
+    assert "isi chunk" not in response.text  # teks chunk tidak dikirim ke client
 
 
 def test_blocked_request_is_reported():

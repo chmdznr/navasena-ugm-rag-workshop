@@ -56,7 +56,7 @@ def insert_chunks(conn, document_id: int, chunks, vectors: np.ndarray) -> None:
 def search(conn, query_vector: np.ndarray, k: int = 5, role: str = "public") -> list[Hit]:
     """Ambil k chunk terdekat. Hak akses disaring di SQL yang sama dengan pencarian vektornya.
 
-    Operator <=> adalah jarak kosinus milik pgvector; kemiripan = 1 - jarak.
+    Operator <=> adalah cosine distance milik pgvector; kemiripan = 1 - jarak.
     """
     levels = ["public", "internal"] if role == "internal" else ["public"]
     rows = conn.execute(

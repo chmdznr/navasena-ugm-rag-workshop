@@ -1,4 +1,4 @@
-"""Tanya pustaka dari terminal.
+"""Tanya knowledge base dari terminal.
 
 Contoh:
   python scripts/ask.py "Apa itu faithfulness pada Ragas?"
@@ -29,11 +29,11 @@ def show_hits(title: str, hits) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Tanya pustaka RAG")
+    parser = argparse.ArgumentParser(description="Tanya knowledge base RAG")
     parser.add_argument("question")
-    parser.add_argument("--no-rag", action="store_true", help="jawab tanpa pustaka")
+    parser.add_argument("--no-rag", action="store_true", help="jawab tanpa knowledge base")
     parser.add_argument("--guard", choices=pipeline.GUARD_LEVELS, default="rules",
-                        help="off = tanpa pengaman, rules = aturan sendiri, guardrails = + Guardrails AI")
+                        help="off = tanpa guardrail, rules = rule-based, guardrails = + Guardrails AI")
     parser.add_argument("--role", choices=["public", "internal"], default="public")
     parser.add_argument("-k", type=int, default=5, help="jumlah chunk yang diambil")
     parser.add_argument("--retrieve-only", action="store_true", help="tampilkan chunk saja, tanpa LLM")
@@ -48,12 +48,12 @@ def main() -> None:
                           role=args.role, k=args.k)
     print(answer.text)
     show_hits("Sumber:", answer.hits)
-    show_hits("Disingkirkan pengaman:", answer.dropped)
+    show_hits("Dibuang guardrail:", answer.dropped)
     details = [f"model: {answer.model or '-'}", f"waktu: {answer.latency_s:.1f} dtk"]
     if answer.top_similarity is not None:
         details.append(f"kemiripan tertinggi: {answer.top_similarity:.3f}")
     if answer.flags:
-        details.append(f"tanda: {', '.join(answer.flags)}")
+        details.append(f"flag: {', '.join(answer.flags)}")
     print("\n" + " | ".join(details))
 
 

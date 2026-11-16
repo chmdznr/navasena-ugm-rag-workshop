@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 RUN python -c "from fastembed import TextEmbedding; TextEmbedding('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
 
 # Impor sekali saat build: validator Hub mengunduh data tokenizer NLTK pada impor pertama.
-# Metrik pemakaian anonim Guardrails AI dimatikan lewat berkas konfigurasinya.
+# Metrik pemakaian anonim Guardrails AI dimatikan lewat file konfigurasinya.
 RUN printf 'enable_metrics=false\nuse_remote_inferencing=false\n' > /root/.guardrailsrc \
     && python -c "import guardrails_ai.valid_length, guardrails_ai.secrets_present"
 

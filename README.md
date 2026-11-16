@@ -1,12 +1,12 @@
-# Workshop RAG · Navasena × UGM
+# Workshop RAG Navasena × UGM
 
 Materi workshop "Dari PDF ke asisten riset: membangun RAG yang aman" (Navasena × UGM, 21 November 2026; pembicara Achmad Zaenuri). Isinya slide, tiga notebook latihan, aplikasi web, dan semua kode pendukungnya. Seluruhnya berjalan di laptop lewat Docker Compose.
 
 Studi kasusnya satu dari awal sampai akhir: asisten riset yang menjawab pertanyaan dari delapan paper arXiv tentang Retrieval-Augmented Generation.
 
-## Mulai cepat
+## Quick start
 
-Butuh Docker Desktop (atau Docker Engine dengan Compose v2) dan sekitar 3 GB ruang kosong.
+Butuh Docker Desktop (atau Docker Engine dengan Compose v2) dan sekitar 3 GB ruang disk.
 
 ```bash
 git clone https://github.com/chmdznr/navasena-ugm-rag-workshop.git
@@ -15,9 +15,9 @@ cp .env.example .env          # lalu isi OPENROUTER_API_KEY
 docker compose up --build
 ```
 
-Build pertama memakan beberapa menit karena mengunduh paket Python dan model embedding. Setelah itu, pustaka dibangun otomatis (sekitar dua menit) dan tiga layanan siap dibuka:
+Build pertama memakan beberapa menit karena mengunduh paket Python dan model embedding. Setelah itu, knowledge base dibangun otomatis (sekitar dua menit) dan tiga layanan siap dibuka:
 
-| Alamat | Isi |
+| URL | Isi |
 |---|---|
 | http://localhost:8501 | Aplikasi web asisten riset |
 | http://localhost:8888 | JupyterLab berisi notebook latihan |
@@ -25,13 +25,13 @@ Build pertama memakan beberapa menit karena mengunduh paket Python dan model emb
 
 Key OpenRouter gratis dibuat di https://openrouter.ai/settings/keys. Tanpa key, tab Retrieval, Chunking, dan Peta embedding serta notebook Sesi 2 tetap bisa dipakai, karena bagian itu tidak memanggil LLM.
 
-## Tiga sesi
+## Materi per sesi
 
 | Sesi | Notebook | Yang dikerjakan |
 |---|---|---|
-| 1 · Pengenalan ML dan RAG | `notebooks/01_llm_tanpa_rag.ipynb` | LLM ditanya hal yang tidak ia ketahui, lalu RAG dikerjakan dengan tangan |
-| 2 · Setting up RAG | `notebooks/02_setting_up_rag.ipynb` | Docling, chunking, embedding, pgvector, peta embedding, ukuran kualitas retrieval |
-| 3 · Implementation and safety | `notebooks/03_rag_dan_safety.ipynb` | Tanya-jawab ujung ke ujung, hak akses, dokumen beracun, deteksi anomali, Guardrails AI, perlindungan PII, promptfoo |
+| 1. Pengenalan ML dan RAG | `notebooks/01_llm_tanpa_rag.ipynb` | LLM ditanya hal yang tidak ia ketahui, lalu RAG dikerjakan secara manual |
+| 2. Setting up RAG | `notebooks/02_setting_up_rag.ipynb` | Docling, chunking, embedding, pgvector, peta embedding, evaluasi retrieval |
+| 3. Implementation and safety | `notebooks/03_rag_dan_safety.ipynb` | Tanya-jawab end-to-end, hak akses, dokumen yang disusupi, deteksi anomali, Guardrails AI, perlindungan PII, promptfoo |
 
 Slide ada di `slides/dist/` (PPTX dan PDF).
 
@@ -42,20 +42,20 @@ Setelah ketiga sesi, folder `service/` menunjukkan pipeline yang sama disusun de
 ```
 PDF ── Docling ──> Markdown ── chunking ──> embedding ──> PostgreSQL + pgvector
                                                               │
-pertanyaan ── pengaman ── retrieve ───────────────────────────┘
+pertanyaan ── guardrail ── retrieve ───────────────────────────┘
                               │
-                          augment ── generate (LLM lewat OpenRouter) ── pengaman ── jawaban + sumber
+                          augment ── generate (LLM lewat OpenRouter) ── guardrail ── jawaban + sumber
 ```
 
-| Bagian | Pilihan | Berkas |
+| Bagian | Pilihan | File |
 |---|---|---|
 | Parsing PDF | Docling | `scripts/parse_docling.py` |
 | Chunking | mengikuti struktur Markdown, 700 karakter, overlap 100 | `rag/chunk.py` |
 | Embedding | `paraphrase-multilingual-MiniLM-L12-v2` lewat fastembed, lokal di CPU | `rag/embed.py` |
 | Vector database | PostgreSQL 17 + pgvector, indeks HNSW | `db/init.sql`, `rag/db.py` |
-| LLM | OpenRouter, bawaan `openrouter/free` | `rag/llm.py` |
+| LLM | OpenRouter, default `openrouter/free` | `rag/llm.py` |
 | Alur tanya-jawab | retrieve, augment, generate | `rag/pipeline.py` |
-| Pengaman | aturan sendiri, lalu Guardrails AI (validator Hub dan validator buatan sendiri) | `rag/safety.py`, `rag/guards.py` |
+| Guardrail | rule-based, lalu Guardrails AI (validator Hub dan validator custom) | `rag/safety.py`, `rag/guards.py` |
 | Pengujian | promptfoo lewat API | `uji/promptfooconfig.yaml`, `app/api.py` |
 | Versi framework | LlamaIndex + FastAPI sebagai layanan | `service/` |
 
@@ -73,7 +73,7 @@ docker compose exec app python scripts/ask.py --role internal "Berapa anggaran k
 # Ukur kualitas retrieval (tanpa LLM)
 docker compose exec app python scripts/evaluate_retrieval.py
 
-# Bangun ulang pustaka setelah mengubah dokumen atau ukuran chunk
+# Bangun ulang knowledge base setelah mengubah dokumen atau ukuran chunk
 docker compose run --rm ingest
 
 # Parsing ulang PDF dengan Docling (image terpisah, beberapa GB)
@@ -85,21 +85,21 @@ docker compose --profile uji run --rm promptfoo
 # Layanan versi framework (LlamaIndex) di http://localhost:8080/docs
 docker compose --profile service up --build
 
-# Berhenti; tambahkan -v untuk menghapus isi basis data
+# Berhenti; tambahkan -v untuk menghapus isi database
 docker compose down
 ```
 
-## Tingkat pengaman
+## Level guardrail
 
-Aplikasi, API, dan `scripts/ask.py` menerima tiga tingkat pengaman:
+Aplikasi, API, dan `scripts/ask.py` menerima tiga level guardrail:
 
 | Tingkat | Isi | Panggilan LLM tambahan |
 |---|---|---|
-| `off` | tanpa pengaman | 0 |
-| `rules` | penyamaran PII pada pertanyaan dan jawaban, pola injeksi pada pertanyaan dan dokumen, ambang kemiripan untuk pertanyaan di luar cakupan, prompt yang memperlakukan konteks sebagai data | 0 |
-| `guardrails` | semua di atas, ditambah guard masukan dan guard keluaran Guardrails AI | 2 per pertanyaan |
+| `off` | tanpa guardrail | 0 |
+| `rules` | masking PII pada pertanyaan dan jawaban, pola injeksi pada pertanyaan dan dokumen, threshold kemiripan untuk pertanyaan di luar cakupan, prompt yang memperlakukan konteks sebagai data | 0 |
+| `guardrails` | semua di atas, ditambah guard input dan guard output Guardrails AI | 2 per pertanyaan |
 
-Hak akses dokumen (`public` atau `internal`) selalu disaring di SQL, apa pun tingkat pengamannya.
+Hak akses dokumen (`public` atau `internal`) selalu disaring di SQL, apa pun level guardrail-nya.
 
 Dua dokumen di `data/extra/` adalah contoh buatan untuk demo keamanan: satu catatan internal fiktif (termasuk kontak dan NIK karangan) dan satu unggahan forum yang disisipi perintah untuk asisten. Pola di `rag/safety.py` adalah contoh untuk belajar, bukan daftar yang lengkap.
 
@@ -107,11 +107,11 @@ Guardrails AI dipakai dengan dua jenis validator: dari Guardrails Hub (`ValidLen
 
 ### Perlindungan PII
 
-Pada tingkat `rules` dan `guardrails`, surel, nomor HP, NIK, NPWP, dan nomor kartu disamarkan di pertanyaan (sebelum retrieval, sebelum dikirim ke LLM, dan sebelum dicatat di log) serta di jawaban. Tiga batasnya:
+Pada level `rules` dan `guardrails`, email, nomor HP, NIK, NPWP, dan nomor kartu di-mask di pertanyaan (sebelum retrieval, sebelum dikirim ke LLM, dan sebelum dicatat di log) serta di jawaban. Tiga batasnya:
 
-- Nama orang tidak dikenali pola teks. Isi `PII_ENGINE=presidio` setelah `pip install guardrails-ai-detect-pii` untuk menambahkan `DetectPII` dari Guardrails Hub. Validator itu mengunduh model sekitar 400 MB dan tidak mengenal NIK.
-- Chunk dokumen yang memuat PII tetap terkirim ke penyedia LLM sebagai konteks. Untuk data sungguhan, samarkan PII saat ingest.
-- Pola bisa meleset: deretan 16 digit yang bukan NIK ikut disamarkan.
+- Nama orang tidak dikenali regex. Isi `PII_ENGINE=presidio` setelah `pip install guardrails-ai-detect-pii` untuk menambahkan `DetectPII` dari Guardrails Hub. Validator itu mengunduh model sekitar 400 MB dan tidak mengenal NIK.
+- Chunk dokumen yang memuat PII tetap terkirim ke provider LLM sebagai konteks. Untuk data sungguhan, mask PII saat ingest.
+- Pola bisa meleset: deretan 16 digit yang bukan NIK ikut di-mask.
 
 ## Kuota OpenRouter
 
@@ -121,7 +121,7 @@ Model gratis OpenRouter dibatasi per akun, baik per menit maupun per hari. Batas
 
 ## Menjalankan tanpa Docker untuk aplikasinya
 
-Basis data tetap dari Compose; Python dijalankan langsung.
+Database tetap dari Compose; Python dijalankan langsung.
 
 ```bash
 docker compose up -d db

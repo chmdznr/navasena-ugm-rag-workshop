@@ -14,7 +14,7 @@ Kalimat pertama metode. Kalimat kedua metode yang menjelaskan langkah berikutnya
 
 ## References
 
-[1] Sebuah rujukan yang tidak perlu ikut masuk ke pustaka sama sekali, panjangnya cukup.
+[1] Sebuah rujukan yang tidak perlu ikut masuk ke knowledge base sama sekali, panjangnya cukup.
 """
 
 
