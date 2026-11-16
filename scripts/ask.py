@@ -4,7 +4,7 @@ Contoh:
   python scripts/ask.py "Apa itu faithfulness pada Ragas?"
   python scripts/ask.py --no-rag "Apa itu faithfulness pada Ragas?"
   python scripts/ask.py --guard off "Berapa ukuran chunk yang disarankan?"
-  python scripts/ask.py --guard nemo "Berapa ukuran chunk yang disarankan?"
+  python scripts/ask.py --guard guardrails "Berapa ukuran chunk yang disarankan?"
   python scripts/ask.py --role internal "Berapa anggaran komputasi lab?"
   python scripts/ask.py --retrieve-only "Bagaimana RAPTOR membangun pohon?"
 """
@@ -33,7 +33,7 @@ def main() -> None:
     parser.add_argument("question")
     parser.add_argument("--no-rag", action="store_true", help="jawab tanpa pustaka")
     parser.add_argument("--guard", choices=pipeline.GUARD_LEVELS, default="rules",
-                        help="off = tanpa pengaman, rules = aturan sendiri, nemo = + NeMo Guardrails")
+                        help="off = tanpa pengaman, rules = aturan sendiri, guardrails = + Guardrails AI")
     parser.add_argument("--role", choices=["public", "internal"], default="public")
     parser.add_argument("-k", type=int, default=5, help="jumlah chunk yang diambil")
     parser.add_argument("--retrieve-only", action="store_true", help="tampilkan chunk saja, tanpa LLM")

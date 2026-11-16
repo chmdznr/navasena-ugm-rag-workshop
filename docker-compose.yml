@@ -2,6 +2,7 @@
 #   docker compose up --build        -> basis data, ingest, aplikasi web, API, JupyterLab
 #   docker compose --profile docling run --rm docling    -> parsing ulang PDF dengan Docling
 #   docker compose --profile uji run --rm promptfoo      -> uji keamanan dengan promptfoo
+#   docker compose --profile service up --build          -> layanan RAG berbasis LlamaIndex (port 8080)
 
 x-workshop: &workshop
   build: .
@@ -98,6 +99,50 @@ services:
       - ./uji:/workshop/uji
     depends_on:
       - api
+
+  # --- Versi framework (LlamaIndex) yang disusun seperti layanan production ---------------
+  # Job ingest dipisah dari layanan API, dan keduanya memakai image yang sama.
+  service-ingest:
+    profiles: ["service"]
+    build: &service-build
+      context: .
+      dockerfile: service/Dockerfile
+    image: navasena-rag-service:latest
+    command: python -m service.app.ingest
+    environment: &service-env
+      DATABASE_URL: postgresql://rag:rag@db:5432/rag
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-openrouter/free}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://openrouter.ai/api/v1}
+      GUARD_MODEL: ${GUARD_MODEL:-}
+      GUARD_LEVEL: ${GUARD_LEVEL:-rules}
+      SERVICE_API_KEYS: ${SERVICE_API_KEYS:-kunci-publik-demo:public,kunci-internal-demo:internal}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # API: http://localhost:8080/docs
+  service:
+    profiles: ["service"]
+    build: *service-build
+    image: navasena-rag-service:latest
+    environment: *service-env
+    ports:
+      - "127.0.0.1:8080:8080"
+    read_only: true            # sistem berkas container tidak bisa ditulisi
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2g
+    depends_on:
+      service-ingest:
+        condition: service_completed_successfully
 
 volumes:
   pgdata:

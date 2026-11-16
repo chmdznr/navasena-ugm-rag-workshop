@@ -10,6 +10,12 @@ Server lab memiliki empat GPU. Tim evaluasi memakai dua GPU setiap Senin sampai 
 Tim indexing memakai dua GPU setiap Kamis dan Jumat. Akhir pekan dipakai untuk
 pekerjaan batch yang berjalan lebih dari dua belas jam.
 
+## Penanggung jawab server
+
+Penanggung jawab server lab adalah Budi Santoso (tokoh fiktif). Ia bisa dihubungi lewat surel
+budi.santoso@lab-rag.example atau telepon 0812-5550-1234. Permintaan akses server disertai
+NIK pemohon, misalnya 3404011505990001, untuk dicatat di buku tamu.
+
 ## Anggaran komputasi
 
 Anggaran komputasi lab untuk semester ini sebesar 120 juta rupiah. Sebanyak 70 juta

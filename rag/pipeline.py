@@ -44,9 +44,9 @@ OUTPUT_BLOCKED_MESSAGE = (
 
 # Tingkat pengaman:
 #   "off"   : tanpa pengaman
-#   "rules" : aturan buatan sendiri di rag/safety.py (pola teks + ambang kemiripan)
-#   "nemo"  : aturan di atas ditambah NeMo Guardrails (LLM menilai masukan dan keluaran)
-GUARD_LEVELS = ("off", "rules", "nemo")
+#   "rules" : pemeriksaan tanpa panggilan LLM: pola injeksi, ambang kemiripan, dan penyamaran PII
+#   "guardrails" : aturan di atas ditambah validator Guardrails AI pada masukan dan keluaran
+GUARD_LEVELS = ("off", "rules", "guardrails")
 DEFAULT_THRESHOLD = 0.35
 
 
@@ -61,6 +61,7 @@ class Answer:
     blocked: bool = False
     top_similarity: float | None = None
     prompt: str = ""                                        # prompt akhir, untuk dipelajari
+    guard_failures: dict = field(default_factory=dict)      # validator Guardrails AI yang gagal
 
 
 def retrieve(conn, question: str, k: int = TOP_K, role: str = "public") -> list[db.Hit]:
@@ -98,20 +99,27 @@ def ask(conn, question: str, use_rag: bool = True, guard: str = "rules", role: s
     answer = _ask(conn, question, use_rag, guard, role, k, model)
     answer.latency_s = time.time() - start
     if log:
-        db.log_query(conn, question, role, answer.top_similarity, answer.flags, answer.blocked,
+        logged = _mask_pii(question)[0] if guard != "off" else question
+        db.log_query(conn, logged, role, answer.top_similarity, answer.flags, answer.blocked,
                      answer.model, int(answer.latency_s * 1000))
     return answer
 
 
-def _nemo(check, *args) -> tuple[bool, str | None]:
-    """Jalankan satu rail NeMo. Bila pemanggilannya gagal, pertanyaan tetap diteruskan
-    dan kegagalannya dicatat sebagai tanda supaya terlihat di log."""
-    from . import guardrails
+def _mask_pii(text: str) -> tuple[str, list[str]]:
+    from . import guards
+
+    return guards.mask_pii(text)
+
+
+def _guardrails(check: str, text: str) -> tuple[dict[str, str], str | None]:
+    """Jalankan satu guard Guardrails AI. Bila pemanggilannya gagal (mis. model pemeriksa tidak
+    menjawab), alur tetap diteruskan dan kegagalannya dicatat sebagai tanda supaya terlihat di log."""
+    from . import guards
 
     try:
-        return getattr(guardrails, check)(*args), None
+        return getattr(guards, check)(text), None
     except Exception:
-        return False, "nemo_tidak_tersedia"
+        return {}, "guardrails_tidak_tersedia"
 
 
 def _ask(conn, question, use_rag, guard, role, k, model) -> Answer:
@@ -122,16 +130,24 @@ def _ask(conn, question, use_rag, guard, role, k, model) -> Answer:
 
     guarded = guard != "off"
 
+    # 0) Samarkan PII lebih dulu, supaya tidak ikut ke log, ke retrieval, atau ke penyedia LLM.
+    flags: list[str] = []
+    if guarded:
+        question, pii = _mask_pii(question)
+        if pii:
+            flags.append("pii_pada_pertanyaan")
+
     # 1) Periksa pertanyaan sebelum melakukan apa pun.
-    flags = safety.check_question(question) if guarded else []
+    flags += safety.check_question(question) if guarded else []
     if "injeksi_pada_pertanyaan" in flags:
         return Answer(BLOCKED_MESSAGE, flags=flags, blocked=True)
-    if guard == "nemo":
-        blocked, problem = _nemo("input_blocked", question)
+    if guard == "guardrails":
+        failed, problem = _guardrails("check_input", question)
         if problem:
             flags.append(problem)
-        if blocked:
-            return Answer(BLOCKED_MESSAGE, flags=flags + ["nemo_rail_masukan"], blocked=True)
+        if failed:
+            return Answer(BLOCKED_MESSAGE, flags=flags + ["guardrails_masukan"], blocked=True,
+                          guard_failures=failed)
 
     # 2) Retrieve: cari chunk yang paling mirip dengan pertanyaan.
     hits = retrieve(conn, question, k=k, role=role)
@@ -155,12 +171,20 @@ def _ask(conn, question, use_rag, guard, role, k, model) -> Answer:
     answer = Answer(result.text, result.model, hits=hits, dropped=dropped, flags=flags,
                     top_similarity=top, prompt=messages[-1]["content"])
 
-    # 6) Periksa jawaban sebelum ditampilkan.
-    if guard == "nemo":
-        blocked, problem = _nemo("output_blocked", question, result.text)
+    # 6) Periksa jawaban sebelum ditampilkan: samarkan PII, lalu jalankan guard keluaran.
+    if guarded:
+        answer.text, pii = _mask_pii(answer.text)
+        if pii:
+            answer.flags.append("pii_pada_jawaban")
+    if guard == "guardrails":
+        failed, problem = _guardrails("check_output", answer.text)
         if problem and problem not in answer.flags:
             answer.flags.append(problem)
-        if blocked:
+        answer.guard_failures = failed
+        # Jawaban tanpa nomor sumber hanya ditandai; pelanggaran lain membuat jawaban ditahan.
+        if "HasCitation" in failed:
+            answer.flags.append("jawaban_tanpa_sumber")
+        if set(failed) - {"HasCitation"}:
             answer.text, answer.blocked = OUTPUT_BLOCKED_MESSAGE, True
-            answer.flags.append("nemo_rail_keluaran")
+            answer.flags.append("guardrails_keluaran")
     return answer

@@ -16,7 +16,7 @@ app = FastAPI(title="Workshop RAG API")
 
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=4000)
-    guard: Literal["off", "rules", "nemo"] = "rules"
+    guard: Literal["off", "rules", "guardrails"] = "rules"
     role: Literal["public", "internal"] = "public"
     use_rag: bool = True
     k: int = Field(default=5, ge=1, le=10)

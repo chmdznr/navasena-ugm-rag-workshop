@@ -1,6 +1,6 @@
 # Workshop RAG · Navasena × UGM
 
-Materi workshop "Dari PDF ke asisten riset: membangun RAG yang aman". Isinya slide, tiga notebook latihan, aplikasi web, dan semua kode pendukungnya. Seluruhnya berjalan di laptop lewat Docker Compose.
+Materi workshop "Dari PDF ke asisten riset: membangun RAG yang aman" (Navasena × UGM, 21 November 2026; pembicara Achmad Zaenuri). Isinya slide, tiga notebook latihan, aplikasi web, dan semua kode pendukungnya. Seluruhnya berjalan di laptop lewat Docker Compose.
 
 Studi kasusnya satu dari awal sampai akhir: asisten riset yang menjawab pertanyaan dari delapan paper arXiv tentang Retrieval-Augmented Generation.
 
@@ -31,9 +31,11 @@ Key OpenRouter gratis dibuat di https://openrouter.ai/settings/keys. Tanpa key, 
 |---|---|---|
 | 1 · Pengenalan ML dan RAG | `notebooks/01_llm_tanpa_rag.ipynb` | LLM ditanya hal yang tidak ia ketahui, lalu RAG dikerjakan dengan tangan |
 | 2 · Setting up RAG | `notebooks/02_setting_up_rag.ipynb` | Docling, chunking, embedding, pgvector, peta embedding, ukuran kualitas retrieval |
-| 3 · Implementation and safety | `notebooks/03_rag_dan_safety.ipynb` | Tanya-jawab ujung ke ujung, hak akses, dokumen beracun, deteksi anomali, NeMo Guardrails, promptfoo |
+| 3 · Implementation and safety | `notebooks/03_rag_dan_safety.ipynb` | Tanya-jawab ujung ke ujung, hak akses, dokumen beracun, deteksi anomali, Guardrails AI, perlindungan PII, promptfoo |
 
 Slide ada di `slides/dist/`. Soal kuis dan panduan pembicara ada di `docs/`.
+
+Setelah ketiga sesi, folder `service/` menunjukkan pipeline yang sama disusun dengan framework (LlamaIndex) sebagai layanan yang mendekati production. Lihat `service/README.md`.
 
 ## Arsitektur
 
@@ -53,8 +55,9 @@ pertanyaan ── pengaman ── retrieve ────────────�
 | Vector database | PostgreSQL 17 + pgvector, indeks HNSW | `db/init.sql`, `rag/db.py` |
 | LLM | OpenRouter, bawaan `openrouter/free` | `rag/llm.py` |
 | Alur tanya-jawab | retrieve, augment, generate | `rag/pipeline.py` |
-| Pengaman | aturan sendiri, lalu NeMo Guardrails | `rag/safety.py`, `rag/guardrails.py`, `guardrails/` |
+| Pengaman | aturan sendiri, lalu Guardrails AI (validator Hub dan validator buatan sendiri) | `rag/safety.py`, `rag/guards.py` |
 | Pengujian | promptfoo lewat API | `uji/promptfooconfig.yaml`, `app/api.py` |
+| Versi framework | LlamaIndex + FastAPI sebagai layanan | `service/` |
 
 ## Perintah yang sering dipakai
 
@@ -62,8 +65,8 @@ Semua perintah dijalankan dari folder repo.
 
 ```bash
 # Tanya dari terminal
-docker compose exec app python scripts/ask.py "Bagaimana Ragas mengukur faithfulness?"
-docker compose exec app python scripts/ask.py --retrieve-only "Bagaimana RAPTOR membangun pohon?"
+docker compose exec app python scripts/ask.py "Bagaimana RAPTOR membangun pohon ringkasan dari dokumen?"
+docker compose exec app python scripts/ask.py --retrieve-only "Bagaimana Ragas mengukur faithfulness?"
 docker compose exec app python scripts/ask.py --guard off "Berapa ukuran chunk yang disarankan?"
 docker compose exec app python scripts/ask.py --role internal "Berapa anggaran komputasi lab?"
 
@@ -79,6 +82,9 @@ docker compose --profile docling run --rm docling
 # Uji keamanan dengan promptfoo
 docker compose --profile uji run --rm promptfoo
 
+# Layanan versi framework (LlamaIndex) di http://localhost:8080/docs
+docker compose --profile service up --build
+
 # Berhenti; tambahkan -v untuk menghapus isi basis data
 docker compose down
 ```
@@ -90,12 +96,22 @@ Aplikasi, API, dan `scripts/ask.py` menerima tiga tingkat pengaman:
 | Tingkat | Isi | Panggilan LLM tambahan |
 |---|---|---|
 | `off` | tanpa pengaman | 0 |
-| `rules` | pola injeksi pada pertanyaan dan dokumen, ambang kemiripan untuk pertanyaan di luar cakupan, prompt yang memperlakukan konteks sebagai data | 0 |
-| `nemo` | semua di atas, ditambah rail masukan dan rail keluaran NeMo Guardrails | 2 per pertanyaan |
+| `rules` | penyamaran PII pada pertanyaan dan jawaban, pola injeksi pada pertanyaan dan dokumen, ambang kemiripan untuk pertanyaan di luar cakupan, prompt yang memperlakukan konteks sebagai data | 0 |
+| `guardrails` | semua di atas, ditambah guard masukan dan guard keluaran Guardrails AI | 2 per pertanyaan |
 
 Hak akses dokumen (`public` atau `internal`) selalu disaring di SQL, apa pun tingkat pengamannya.
 
-Dua dokumen di `data/extra/` adalah contoh buatan untuk demo keamanan: satu catatan internal fiktif dan satu unggahan forum yang disisipi perintah untuk asisten. Pola di `rag/safety.py` adalah contoh untuk belajar, bukan daftar yang lengkap.
+Dua dokumen di `data/extra/` adalah contoh buatan untuk demo keamanan: satu catatan internal fiktif (termasuk kontak dan NIK karangan) dan satu unggahan forum yang disisipi perintah untuk asisten. Pola di `rag/safety.py` adalah contoh untuk belajar, bukan daftar yang lengkap.
+
+Guardrails AI dipakai dengan dua jenis validator: dari Guardrails Hub (`ValidLength`, `SecretsPresent`, dipasang lewat pip tanpa akun atau API key) dan buatan sendiri di `rag/guards.py`. Validator `LLMPolicy` memakai LLM sebagai penilai, sehingga hasilnya bisa berbeda antarpanggilan.
+
+### Perlindungan PII
+
+Pada tingkat `rules` dan `guardrails`, surel, nomor HP, NIK, NPWP, dan nomor kartu disamarkan di pertanyaan (sebelum retrieval, sebelum dikirim ke LLM, dan sebelum dicatat di log) serta di jawaban. Tiga batasnya:
+
+- Nama orang tidak dikenali pola teks. Isi `PII_ENGINE=presidio` setelah `pip install guardrails-ai-detect-pii` untuk menambahkan `DetectPII` dari Guardrails Hub. Validator itu mengunduh model sekitar 400 MB dan tidak mengenal NIK.
+- Chunk dokumen yang memuat PII tetap terkirim ke penyedia LLM sebagai konteks. Untuk data sungguhan, samarkan PII saat ingest.
+- Pola bisa meleset: deretan 16 digit yang bukan NIK ikut disamarkan.
 
 ## Kuota OpenRouter
 
@@ -113,6 +129,13 @@ python -m venv .venv && .venv/bin/pip install -r requirements.txt pytest
 .venv/bin/python scripts/ingest.py
 .venv/bin/streamlit run app/app.py
 .venv/bin/python -m pytest tests -q
+```
+
+Uji layanan (`service/tests`) butuh dependensi tambahan:
+
+```bash
+.venv/bin/pip install -r service/requirements.txt httpx
+.venv/bin/python -m pytest tests service/tests -q
 ```
 
 ## Membangun ulang slide
