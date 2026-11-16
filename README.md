@@ -33,7 +33,7 @@ Key OpenRouter gratis dibuat di https://openrouter.ai/settings/keys. Tanpa key, 
 | 2. Setting up RAG | `notebooks/02_setting_up_rag.ipynb` | Docling, chunking, embedding, pgvector, peta embedding, evaluasi retrieval |
 | 3. Implementation and safety | `notebooks/03_rag_dan_safety.ipynb` | Tanya-jawab end-to-end, hak akses, dokumen yang disusupi, deteksi anomali, Guardrails AI, perlindungan PII, promptfoo |
 
-Slide ada di `slides/dist/` (PPTX dan PDF).
+Slide ada di `slides/dist/` (PPTX dan PDF). Di folder yang sama ada `Navasena_UGM_Handout.pdf`, ringkasan satu halaman berisi alur RAG, perintah yang sering dipakai, istilah penting, dan latihan lanjutan.
 
 Setelah ketiga sesi, folder `service/` menunjukkan pipeline yang sama disusun dengan framework (LlamaIndex) sebagai layanan yang mendekati production. Lihat `service/README.md`.
 
