@@ -90,3 +90,18 @@ def test_metrics_are_exposed():
     with make_client() as client:
         client.post("/v1/query", json={"question": "apa itu RAG?"}, headers={"X-API-Key": "k-pub"})
         assert "rag_requests_total" in client.get("/metrics").text
+
+
+def test_settings_require_api_keys(monkeypatch):
+    import pytest
+    from pydantic import ValidationError
+
+    monkeypatch.delenv("SERVICE_API_KEYS", raising=False)
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, openrouter_api_key="uji")
+
+
+def test_demo_keys_are_detected():
+    demo = Settings(_env_file=None, openrouter_api_key="uji", service_api_keys="kunci-publik-demo:public")
+    real = Settings(_env_file=None, openrouter_api_key="uji", service_api_keys="k-pub:public")
+    assert demo.uses_demo_keys and not real.uses_demo_keys

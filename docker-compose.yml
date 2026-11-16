@@ -116,7 +116,7 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://openrouter.ai/api/v1}
       GUARD_MODEL: ${GUARD_MODEL:-}
       GUARD_LEVEL: ${GUARD_LEVEL:-rules}
-      SERVICE_API_KEYS: ${SERVICE_API_KEYS:-kunci-publik-demo:public,kunci-internal-demo:internal}
+      SERVICE_API_KEYS: ${SERVICE_API_KEYS:?isi SERVICE_API_KEYS di .env (lihat .env.example)}
     depends_on:
       db:
         condition: service_healthy

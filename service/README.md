@@ -17,7 +17,7 @@ curl -s localhost:8080/v1/query \
   -d '{"question": "Bagaimana RAPTOR membangun pohon ringkasan dari dokumen?"}'
 ```
 
-Ganti kuncinya dengan `kunci-internal-demo` untuk peran internal. Kedua kunci itu hanya contoh; nilainya diatur lewat `SERVICE_API_KEYS`.
+Ganti kuncinya dengan `kunci-internal-demo` untuk peran internal. Kedua kunci itu hanya contoh dari `.env.example`. `SERVICE_API_KEYS` wajib diisi lewat environment (tidak ada nilai bawaan di kode maupun di compose), dan layanan mencatat peringatan saat start bila kunci contoh masih dipakai.
 
 ## Yang digantikan framework
 
@@ -37,7 +37,7 @@ Pengaman tetap memakai `rag/safety.py` dan `rag/guards.py` (Guardrails AI). Fram
 |---|---|---|
 | Konfigurasi dari environment, divalidasi saat start | `app/settings.py` | Layanan menolak start bila `OPENROUTER_API_KEY` kosong |
 | Ingest terpisah dari penyajian | `app/ingest.py`, `service-ingest` | Job sekali jalan, aman diulang; API tidak pernah menulis pustaka |
-| Peran dari kunci API | `app/main.py` | Hak akses diturunkan dari `X-API-Key`, bukan dari isi permintaan |
+| Peran dari kunci API | `app/main.py` | Hak akses diturunkan dari `X-API-Key`, bukan dari isi permintaan; kunci dibandingkan dalam waktu tetap |
 | Tingkat pengaman ditentukan server | `GUARD_LEVEL` | Klien tidak bisa mematikan pengaman |
 | Liveness dan readiness | `/healthz`, `/readyz` | Readiness gagal bila basis data tidak terjangkau atau pustaka kosong |
 | Batas waktu dan pengulangan | `app/engine.py`, `app/main.py` | Batas waktu LLM, pengulangan untuk jawaban kosong, batas total per permintaan (504) |

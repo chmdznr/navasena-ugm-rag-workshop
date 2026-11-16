@@ -8,6 +8,9 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+DEMO_KEYS = {"kunci-publik-demo", "kunci-internal-demo"}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -31,7 +34,8 @@ class Settings(BaseSettings):
     anomaly_threshold_default: float = 0.35
 
     # "kunci:peran" dipisah koma. Peran pengguna diturunkan dari kunci, bukan dari isi permintaan.
-    service_api_keys: str = "kunci-publik-demo:public,kunci-internal-demo:internal"
+    # Wajib diisi lewat environment; tidak ada nilai bawaan di kode.
+    service_api_keys: str = Field(min_length=1)
 
     log_level: str = "INFO"
 
@@ -42,6 +46,11 @@ class Settings(BaseSettings):
     @property
     def async_url(self) -> str:
         return self.database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+    @property
+    def uses_demo_keys(self) -> bool:
+        """True bila kunci contoh dari .env.example masih dipakai."""
+        return any(key in DEMO_KEYS for key in self.api_keys)
 
     @property
     def api_keys(self) -> dict[str, str]:

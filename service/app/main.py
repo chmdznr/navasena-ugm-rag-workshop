@@ -5,6 +5,7 @@ Jalankan:  uvicorn service.app.main:app --port 8080
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
 import logging
 import sys
@@ -77,16 +78,20 @@ def create_app(engine=None, settings: Settings | None = None) -> FastAPI:
             app.state.engine = RagEngine(app.state.settings)
         else:
             app.state.engine = engine
+        if app.state.settings.uses_demo_keys:
+            log.warning("SERVICE_API_KEYS masih memakai kunci contoh; ganti sebelum layanan dibuka ke jaringan")
         log.info("layanan siap", extra={"fields": {"guard_level": app.state.settings.guard_level}})
         yield
 
     app = FastAPI(title="Layanan RAG", version="1.0.0", lifespan=lifespan)
 
     def role_from_key(request: Request, x_api_key: str | None = Header(default=None)) -> str:
-        role = request.app.state.settings.api_keys.get(x_api_key or "")
-        if role is None:
-            raise HTTPException(status_code=401, detail="X-API-Key tidak dikenal")
-        return role
+        given = (x_api_key or "").encode()
+        # Bandingkan dalam waktu tetap supaya kunci tidak bisa ditebak dari lama respons.
+        for key, role in request.app.state.settings.api_keys.items():
+            if hmac.compare_digest(given, key.encode()):
+                return role
+        raise HTTPException(status_code=401, detail="X-API-Key tidak dikenal")
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> dict:
