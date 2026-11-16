@@ -17,7 +17,7 @@ curl -s localhost:8080/v1/query \
   -d '{"question": "Bagaimana RAPTOR membangun pohon ringkasan dari dokumen?"}'
 ```
 
-Ganti kuncinya dengan `kunci-internal-demo` untuk peran internal. Kedua kunci itu hanya contoh dari `.env.example`. `SERVICE_API_KEYS` wajib diisi lewat environment (tidak ada nilai bawaan di kode maupun di compose), dan layanan mencatat peringatan saat start bila kunci contoh masih dipakai.
+Ganti kuncinya dengan `kunci-internal-demo` untuk peran internal. Kedua kunci itu hanya contoh dari `.env.example`. `SERVICE_API_KEYS` wajib diisi lewat environment (tidak ada nilai bawaan di kode maupun di compose). Bila kosong, layanan menolak start; bila masih memakai kunci contoh, layanan mencatat peringatan saat start.
 
 ## Yang digantikan framework
 
